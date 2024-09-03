@@ -297,19 +297,13 @@ class JsonFlexConfig:
            configuration, used by exceptions for error reporting.
         
         Raises:
-         * `MissingMandatoryException`: If a mandatory parameter is not
-                                        provided.
-         * `BadValueTypeException`: If the type of `value` does not match the
-                                    expected type.
-         * `BadListSizeException`: If the size of a list does not match the
-                                   expected size.
-         * `BadCompositeTypeException`: If an element in a list is of the wrong
-                                        type.
-         * `BadNameException`: If a key in a dictionary is not recognized.
-         * `ValueOutOfRangeException`: If a numeric value is outside the
-                                       specified range.
-         * `UnauthorizedValueException`: If the value is not in the set of
-                                         authorized values.
+         * `MissingMandatoryException`
+         * `BadValueTypeException`
+         * `BadListSizeException`
+         * `BadCompositeTypeException`
+         * `BadNameException`
+         * `ValueOutOfRangeException`
+         * `UnauthorizedValueException`
         All exceptions include the complete path of the parameter that
         triggered the error.
         """
@@ -407,8 +401,7 @@ class JsonFlexConfig:
         default value if it is not defined.
         
         Raises:
-         * `InexistentParamException` if the provided parameter's name can't be
-           found in the configuration file and doesn't have a default value.
+         * `InexistentParamException`
         """
         try:
             param_value = self.config.get(param, self.configMetadata[param].get("default"))
@@ -438,20 +431,14 @@ class JsonFlexConfig:
         Set value to the parameter.
         
         Raises:
-         * `InexistentParamException`: If the provided parameter's name can't be
-                                       found in the metadata.
-         * `MissingMandatoryException`: If a mandatory parameter is not provided.
-         * `BadValueTypeException`: If the type of `value` does not match the
-                                    expected type.
-         * `BadListSizeException`: If the size of a list does not match the
-                                   expected size.
-         * `BadListTypeException`: If an element in a list is of the wrong
-                                   type.
-         * `BadNameException`: If a key in a dictionary is not recognized.
-         * `ValueOutOfRangeException`: If a numeric value is outside the
-                                       specified range.
-         * `UnauthorizedValueException`: If the value is not in the set of
-                                         authorized values.
+         * `InexistentParamException`
+         * `MissingMandatoryException`
+         * `BadValueTypeException`
+         * `BadListSizeException`
+         * `BadListTypeException`
+         * `BadNameException`
+         * `ValueOutOfRangeException`
+         * `UnauthorizedValueException`
         All exceptions include the complete path of the parameter that
         triggered the error.
         """
