@@ -50,14 +50,14 @@ In addition to these parameters, the metadata file can also define other paramet
 # Exceptions
 
 When loading a configuration file or writing data to a configuration file, the following excetpiosn can be raised in case of invalid configuration data:
- * `BadNameException`: Raised when a param value type is wrong
+ * `BadNameException`: Raised when writing a param name not defined in the metadata
  * `BadValueTypeException`: Raised when a param value type is wrong
- * `MissingMandatoryException`: Raised when a param value type is wrong
+ * `MissingMandatoryException`: Raised when a mandatory param is missing
  * `ValueOutOfRangeException`: Raised when a param digital value is out of range
  * `UnauthorizedValueException`: Raised when a param digital value is not in the set of authorized values
  * `BadListTypeException`: Raised when a list param contains values of wrong type
- * `BadCompositeSizeException`: Raised when a tuple param size is wrong
- * `InexistentParamException`: Raised when a tuple param size is wrong
+ * `BadListSizeException`: Raised when a tuple param size is wrong
+ * `InexistentParamException`: Raised when reading a param that is doesn't exist in the configuration data
 
 
 # Example
