@@ -1,20 +1,13 @@
 # Description
 
-`JsonFlexConfig` allows for configuration management based on metadata describing all the parameters to be used. The configuration is stored in a JSON file as a set of key/value pairs that associates each parameter's name to its value. Once loaded (and if the configuration file is valid), the JsonFlexConfig can be queried for the value of a parameter. If not present, a default value can be returned instead). The parameter values can be modified, and the new values can be stored back in the configuration file (only if explicitly requested). Sub-parameters with specific validation rules can be nested in parameters, allowing for sophisticated file structure.
+`JsonFlexConfig` allows for configuration management based on metadata describing all the parameters to be used. The configuration is stored in a JSON file as a set of key/value pairs that associates each parameter's name to its value. Once loaded (and if the configuration file is valid), the `JsonFlexConfig` object can be queried for the value of a parameter. If not present, a default value can be returned instead). The parameter values can be modified, and the new values can be stored back in the configuration file (only if explicitly requested). Sub-parameters with specific validation rules can be nested in parameters, allowing for sophisticated file structure.
 
-Compared to more advanced configuration management libraries like Pydantic, this class offers a similar level of interaction with configuration files,
-but it is limited to handling JSON format. However, it provides a concise and highly readable declaration of standard rules within a single structure
-defined directly in the code without requiring external files. This approach avoids certain common complexities found in more advanced
-libraries, such as the potential need to define multiple subclasses in some cases or manage separate configuration files. While tools like Pydantic
-excel with their implementation of custom validators and support for various formats, which can be particularly useful in complex scenarios,
-this class is tailored for standard validation needs, making it a practical choice for simpler applications. Nonetheless, it maintains a high level of
-sophistication in validation with standard rule definitions, typically exceeding that of `ConfigParser` (at least when using it out of the box).
+Compared to more advanced configuration management libraries like Pydantic, this class offers a similar level of interaction with configuration files, but it is limited to handling JSON format. However, it provides a concise and highly readable declaration of standard rules within a single structure defined directly in the code without requiring external files. This approach avoids certain common complexities found in more advanced libraries, such as the potential need to define multiple subclasses in some cases or manage separate configuration files. While tools like Pydantic excel with their implementation of custom validators and support for various formats, which can be particularly useful in complex scenarios, this class is tailored for standard validation needs, making it a practical choice for simpler applications. Nonetheless, it maintains a high level of sophistication in validation with standard rule definitions, typically exceeding that of `ConfigParser` (at least when using it out of the box).
 
 
 # General rules
 
-A `JsonFlexConfig` object requires metadata that describes the expected format of the configuration file. This is a dictionary, associating a
-parameter's name to a format description. A format description is again a dictionary of all the rules applying to the parameter:
+A `JsonFlexConfig` object requires metadata that describes the expected format of the configuration file. This is a dictionary, associating a parameter's name to a format description. A format description is again a dictionary of all the rules applying to the parameter:
  * "type" (`type`):
    Parameter type. This must be the actual Python type. Any type is accepted, but only the following types provide type-specific rules validation: `int`, `float`, `list`, and `dict`.
  * "mandatory" (`bool`):
