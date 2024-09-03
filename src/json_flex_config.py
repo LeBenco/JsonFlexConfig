@@ -33,9 +33,9 @@ class JsonFlexConfig:
     describing all the parameters to be used. The configuration is stored in a
     JSON file as a set of key/value pairs that associates each parameter's name
     to its value. Once loaded (and if the configuration file is valid), the
-    JsonFlexConfig can be queried for the value of a parameter. If not present,
-    a default value can be returned instead). The parameter values can be
-    modified, and the new values can be stored back in the configuration file
+    `JsonFlexConfig`object can be queried for the value of a parameter. If not
+    present, a default value can be returned instead). The parameter values can
+    be modified, and the new values can be stored back in the configuration file
     (only if explicitly requested). Sub-parameters with specific validation
     rules can be nested in parameters, allowing for sophisticated file
     structure.
