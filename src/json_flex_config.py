@@ -27,8 +27,8 @@ SOFTWARE.
 
 class JsonFlexConfig:
     """
-    Description
-    ===========
+    # Description
+    
     `JsonFlexConfig` allows for configuration management based on metadata
     describing all the parameters to be used. The configuration is stored in a
     JSON file as a set of key/value pairs that associates each parameter's name
@@ -56,8 +56,8 @@ class JsonFlexConfig:
     exceeding that of `ConfigParser` (at least when using it out of the box).
     
 
-    General rules
-    =============
+    # General rules
+    
     A `JsonFlexConfig` object requires metadata that describes the expected
     format of the configuration file. This is a dictionary, associating a
     parameter's name to a format description. A format description is again a
@@ -79,8 +79,8 @@ class JsonFlexConfig:
        String describing the parameter, for display purposes.
 
 
-    Type-specific rules
-    ===================
+    # Type-specific rules
+    
     When dealing with list parameters, a few other rules can be applied:
      * "content_type" (`type`):
        Type of the items in the list. This key must be associated with the
@@ -110,13 +110,26 @@ class JsonFlexConfig:
        `JsonFlexConfig`.
 
 
-    Additional rules
-    ================
+    # Additional rules
+    
     In addition to these parameters, the metadata file can also define other
     parameters, which will be ignored by the parser and can take arbitrary
     forms, making them useful for extending this library's functions (for
     example, specifying widget type and attributes in order to automate the
     creation of the corresponding widget).
+
+
+    # Exceptions
+
+    When loading a configuration file or writing data to a configuration file, the following excetpiosn can be raised in case of invalid configuration data:
+     * `BadNameException`: Raised when a param value type is wrong
+     * `BadValueTypeException`: Raised when a param value type is wrong
+     * `MissingMandatoryException`: Raised when a param value type is wrong
+     * `ValueOutOfRangeException`: Raised when a param digital value is out of range
+     * `UnauthorizedValueException`: Raised when a param digital value is not in the set of authorized values
+     * `BadListTypeException`: Raised when a list param contains values of wrong type
+     * `BadCompositeSizeException`: Raised when a tuple param size is wrong
+     * `InexistentParamException`: Raised when a tuple param size is wrong
 
 
     Example
@@ -529,7 +542,7 @@ class BadListTypeException(ConfigException):
                  +f' of {expected_type.__name__})'
         super().__init__(message)
 
-class BadCompositeSizeException(ConfigException):
+class BadListSizeException(ConfigException):
     """Raised when a tuple param size is wrong"""
     def __init__(self, param, size, expected_size):
         message = "Type error on \""+str(param)\
@@ -539,8 +552,9 @@ class BadCompositeSizeException(ConfigException):
         super().__init__(message)
 
 class InexistentParamException(ConfigException):
-    """Raised when a tuple param size is wrong"""
+    """Raised when a write is attempted on a param that doesn't exist"""
     def __init__(self, file_path, param):
         message = "Param error in "+file_path+": \""+str(param)\
                  +"\" is not a valid option"
         super().__init__(message)
+
