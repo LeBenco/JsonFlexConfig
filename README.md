@@ -1,7 +1,5 @@
-    Description
-    ===========
-    `JsonFlexConfig` allows for configuration management based on metadata
-    describing all the parameters to be used. The configuration is stored in a
+# Description
+`JsonFlexConfig` allows for configuration management based on metadata describing all the parameters to be used. The configuration is stored in a
     JSON file as a set of key/value pairs that associates each parameter's name
     to its value. Once loaded (and if the configuration file is valid), the
     JsonFlexConfig can be queried for the value of a parameter. If not present,
