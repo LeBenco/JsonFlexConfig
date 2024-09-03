@@ -120,16 +120,21 @@ class JsonFlexConfig:
 
 
     # Exceptions
-
-    When loading a configuration file or writing data to a configuration file, the following excetpiosn can be raised in case of invalid configuration data:
-     * `BadNameException`: Raised when a param value type is wrong
+    
+    When loading a configuration file or writing data to a configuration file,
+    the following exception can be raised in case of invalid configuration data:
+     * `BadNameException`: Raised when writing a param name not defined in the
+       metadata
      * `BadValueTypeException`: Raised when a param value type is wrong
-     * `MissingMandatoryException`: Raised when a param value type is wrong
-     * `ValueOutOfRangeException`: Raised when a param digital value is out of range
-     * `UnauthorizedValueException`: Raised when a param digital value is not in the set of authorized values
-     * `BadListTypeException`: Raised when a list param contains values of wrong type
-     * `BadCompositeSizeException`: Raised when a tuple param size is wrong
-     * `InexistentParamException`: Raised when a tuple param size is wrong
+     * `MissingMandatoryException`: Raised when a mandatory param is missing
+     * `ValueOutOfRangeException`: Raised when a digital value is out of range
+     * `UnauthorizedValueException`: Raised when a param value is not in the set of
+       authorized values
+     * `BadListTypeException`: Raised when a list param contains values of wrong
+       type
+     * `BadListSizeException`: Raised when a tuple param size is wrong
+     * `InexistentParamException`: Raised when reading a param that is doesn't exist
+       in the configuration data
 
 
     Example
@@ -473,7 +478,7 @@ class ConfigException(Exception):
     pass
 
 class BadNameException(ConfigException):
-    """Raised when a param value type is wrong"""
+    """Raised when writing a param name not defined in the metadata"""
     def __init__(self, param, context=""):
         message = f'Parameter error: unknown name "{param}"'
         if context:
@@ -500,7 +505,7 @@ class BadValueTypeException(ConfigException):
 
 
 class MissingMandatoryException(ConfigException):
-    """Raised when a param value type is wrong"""
+    """Raised when a mandatory param is missing"""
     def __init__(self, param, context=None):
         message = f'Parameter error: missing mandatory "{param}"'
         if context:
@@ -508,7 +513,7 @@ class MissingMandatoryException(ConfigException):
         super().__init__(message)
 
 class ValueOutOfRangeException(ConfigException):
-    """Raised when a param digital value is out of range"""
+    """Raised when a digital value is out of range"""
     def __init__(self, param, value, bound, context=""):
         source = f'"{param}"'
         if context:
@@ -522,7 +527,7 @@ class ValueOutOfRangeException(ConfigException):
         super().__init__(message)
 
 class UnauthorizedValueException(ConfigException):
-    """Raised when a param digital value is not in the set of authorized values"""
+    """Raised when a param value is not in the set of authorized values"""
     def __init__(self, param, value, authorized_values, context=""):
         source = f'"{param}"'
         if context:
@@ -543,7 +548,7 @@ class BadListTypeException(ConfigException):
         super().__init__(message)
 
 class BadListSizeException(ConfigException):
-    """Raised when a tuple param size is wrong"""
+    """Raised when a list param size is wrong"""
     def __init__(self, param, size, expected_size):
         message = "Type error on \""+str(param)\
                  +"\": wrong size ("+str(size)\
@@ -552,9 +557,9 @@ class BadListSizeException(ConfigException):
         super().__init__(message)
 
 class InexistentParamException(ConfigException):
-    """Raised when a write is attempted on a param that doesn't exist"""
+    """Raised when reading a param that doesn't exist in the
+    configuration data"""
     def __init__(self, file_path, param):
         message = "Param error in "+file_path+": \""+str(param)\
                  +"\" is not a valid option"
         super().__init__(message)
-
