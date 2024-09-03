@@ -49,7 +49,7 @@ In addition to these parameters, the metadata file can also define other paramet
 
 # Exceptions
 
-When loading a configuration file or writing data to a configuration file, the following excetpiosn can be raised in case of invalid configuration data:
+When loading a configuration file or writing data to a configuration file, the following exception can be raised in case of invalid configuration data:
  * `BadNameException`: Raised when writing a param name not defined in the metadata
  * `BadValueTypeException`: Raised when a param value type is wrong
  * `MissingMandatoryException`: Raised when a mandatory param is missing
