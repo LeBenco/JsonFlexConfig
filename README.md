@@ -54,6 +54,19 @@ When dealing with dictionary parameters, additional rules can be applied:
 In addition to these parameters, the metadata file can also define other parameters, which will be ignored by the parser and can take arbitrary forms, making them useful for extending this library's functions (for example, specifying widget type and attributes in order to automate the creation of the corresponding widget).
 
 
+# Exceptions
+
+When loading a configuration file or writing data to a configuration file, the following excetpiosn can be raised in case of invalid configuration data:
+ * `BadNameException`: Raised when a param value type is wrong
+ * `BadValueTypeException`: Raised when a param value type is wrong
+ * `MissingMandatoryException`: Raised when a param value type is wrong
+ * `ValueOutOfRangeException`: Raised when a param digital value is out of range
+ * `UnauthorizedValueException`: Raised when a param digital value is not in the set of authorized values
+ * `BadListTypeException`: Raised when a list param contains values of wrong type
+ * `BadCompositeSizeException`: Raised when a tuple param size is wrong
+ * `InexistentParamException`: Raised when a tuple param size is wrong
+
+
 # Example
 
 Here is an example that creates metadata, loads a configuration file using the defined structure, and manipulates parameter values:
