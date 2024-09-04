@@ -397,20 +397,25 @@ class JsonFlexConfig:
 
     def GetParamValue(self, param):
         """
-        Returns the parameter's value definied in the configuration, or the
-        default value if it is not defined.
+        Returns the parameter's value defined in the configuration, the
+        default value if it is not defined but has a default value, and `None`
+        if not defined and without default value.
         
         Raises:
-         * `InexistentParamException`
+         * `InexistentParamException` if the provided parameter's name can't be
+           found in the metadata.
         """
-        try:
-            param_value = self.config.get(param, self.configMetadata[param].get("default"))
-            if isinstance(param_value, list):
-                return tuple(param_value)
-            else:
-                return param_value
-        except KeyError as e:
+        if param not in self.configMetadata:
             raise InexistentParamException(self.configPath, param)
+        
+        ## value of `param` or default value or `None`
+        param_value = self.config.get(param,
+                                      self.configMetadata[param].get("default"))
+
+        if isinstance(param_value, list):
+            return tuple(param_value)
+        else:
+                return param_value
 
     def GetParamLabel(self, param):
         """
@@ -422,6 +427,7 @@ class JsonFlexConfig:
            found in the metadata.
         """
         try:
+            ## param label or `None` if not defined
             return self.configMetadata[param].get("label")
         except KeyError as e:
             raise InexistentParamException(self.configPath, param)
