@@ -1,3 +1,4 @@
+
 """
 MIT License
 
@@ -21,6 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 ###############################################################################
 ############################## JSON Flex Config ###############################
 
@@ -114,16 +116,35 @@ class JsonFlexConfig:
 
 
     # Type-specific rules
-
-    When dealing with list parameters, two other rules can be applied:
+    
+    When dealing with list parameters, four other rules can be applied:
      * `"content"` (`type` or `dict`):<br>
        Type of the items in the list. If defined, every item in the list must
-       be of this type. If the list contains simple values, `"content"` must be
-       set to their corresponding `type`. If the list contains sub-parameters,
-       `"content"` must be a dictionary defining the type of every
-       sub-parameters, following the same structure as the general metadata.
-       This means that a list can only contain elements of the same type,
-       whether simple or complex.
+       be of this type. If the list contains scalar values, `"content"` must be
+       set to their corresponding `type`. If the list contains sequences of
+       sub-parameters, `"content"` must be a dictionary defining the type of
+       every sub-parameters, following the same structure as the general
+       metadata. This means that a list can only contain elements of the same
+       type, whether a scalar or a sequence.
+     * `"size"` (`int`, optional):<br>
+       number of objects in the list.
+     * `"minsize"` (`int`, optional):<br>
+       minimum number of objects in the list.
+     * `"maxsize"` (`int`, optional):<br>
+       maximum number of objects in the list.
+
+    When dealing with dictionary parameters, one additional rule can be applied:
+     * `"content"`:
+       A dictionary containing metadata description of sub-parameters. This
+       dictionary must contain a list of keys associated with the specific
+       rules applied to each key. These specific pairs of names/rules follow
+       the same structure as the general metadata. Each sub-parameter within
+       the dictionary can have its specific rules, including type, mandatory
+       status, and other constraints.
+
+    When dealing with string parameters, four other rules can be applied:
+     * `"regex"` (`str`, optional):<br>
+        regular expression that the string must match (in the `re` format)
      * `"size"` (`int`, optional):<br>
        number of objects in the list.
      * `"minsize"` (`int`, optional):<br>
@@ -141,22 +162,14 @@ class JsonFlexConfig:
     Note that defining a `float` parameter and providing an `int` bound is
     perfectly valid, since Python allows value comparision between those types.
 
-    When dealing with dictionary parameters, one additional rule can be applied:
-     * `"content"`:
-       A dictionary containing metadata description of sub-parameters. This
-       dictionary must contain a list of keys associated with the specific
-       rules applied to each key. These specific rules follow the same
-       structure as the general metadata. Each sub-parameter within the
-       dictionary can have its specific rules, including type, mandatory
-       status, and other constraints.
-
     Important note: There is almost no verification done on the metadata,
     it's up to the user to ensure that it is correct. An error in metadata may
     lead to inconsistent behavior from _JsonFlexConfig_, for example if a value
     is at the same time in the list of authorized values and in the list of
     forbidden ones, or if a mandatory parameter has a default value. Mutually
-    exclusive rules may also happen, for example if a `min` value is greate
-    than a `max` value.  
+    exclusive rules may also happen, for example if a `min` value is greater
+    than a `max` value, or if a string size is incompatible with a RegEx.
+
 
     # Additional metadata
 
@@ -173,19 +186,22 @@ class JsonFlexConfig:
     the following exception can be raised in case of invalid configuration data:
      * `BadNameException`: Raised when a param name is not defined in the
                            metadata.
-     * `BadValueTypeException`: Raised when a param value type is wrong.
+     * `BadValueTypeException`: Raised when a scalar value does not match the
+                                expected type.
      * `MissingMandatoryException`: Raised when a mandatory param is missing
      * `ValueOutOfRangeException`: Raised when a digital param value is out of
                                    range.
      * `UnauthorizedValueException`: Raised when a param value is not in the
                                      set of authorized values or is in the set
                                      of forbidden values.
-     * `BadListTypeException`: Raised when a list param contains values of
-                               wrong type.
-     * `BadListSizeException`: Raised when a tuple param size is wrong
+     * `BadSequenceSizeException`: Raised when a sequence param size is wrong
      * `InexistentParamException`: Raised when reading a param that doesn't
                                    exist in the configuration data and for
                                    which there is no default value.
+     * `RegexMismatchException`: Raised when a string doesn't match a RegEx.
+     
+    All exceptions include the complete path of the parameter that triggered
+    the error, along with specific information such as expected values or size.
 
 
     # Example
@@ -337,7 +353,7 @@ class JsonFlexConfig:
     Because the third sub-parameter of `lists` misses the parameter `mode` which is
     mandatory according to the metadata. Loading this JSON file thus raises a
     `MissingMandatoryException` with message: `Parameter error: missing
-    mandatory "mode" in "{'name': 'MCU', 'query': '1542'}"`
+    mandatory "mode" in "{'name': 'MCU', 'query': '1542'}"`.
     """
     def __init__(self, config_metadata):
         self.configMetadata = config_metadata
@@ -388,7 +404,8 @@ class JsonFlexConfig:
            in this order:
              a. Type validation against the expected type in metadata.
              b. Type-specific rules:
-                 * For lists: size validation and element type checking.
+                 * For lists: size validation and element type checking
+                   (whether simple or recursive for sub-parameters).
                  * For dictionaries: recursive validation of sub-parameters.
                  * For numeric values: range checking (min/max).
              c. Validation against the set of authorized values, if specified.
@@ -404,22 +421,25 @@ class JsonFlexConfig:
            configuration, used by exceptions for error reporting.
         
         Raises:
-         * `MissingMandatoryException`: If a mandatory parameter is not
-                                        provided.
-         * `BadValueTypeException`: If the type of `value` does not match the
-                                    expected type.
-         * `BadListSizeException`: If the size of a list does not match the
-                                   expected size.
-         * `BadCompositeTypeException`: If an element in a list is of the wrong
-                                        type.
-         * `BadNameException`: If a key in a dictionary is not recognized.
-         * `ValueOutOfRangeException`: If a numeric value is outside the
-                                       specified range.
-         * `UnauthorizedValueException`: If the value is not in the set of
-                                         authorized values or is in the set of
-                                         forbidden values.
+         * `BadNameException`: Raised when a param name is not defined in the
+                               metadata.
+         * `BadValueTypeException`: Raised when a scalar value does not match
+                                    the expected type.
+         * `MissingMandatoryException`: Raised when a mandatory param is missing
+         * `ValueOutOfRangeException`: Raised when a digital param value is out
+                                       of range.
+         * `UnauthorizedValueException`: Raised when a param value is not in
+                                         the set of authorized values or is in
+                                         the set of forbidden values.
+         * `BadSequenceSizeException`: Raised when a sequence param size is wrong
+         * `InexistentParamException`: Raised when reading a param that doesn't
+                                       exist in the configuration data and for
+                                       which there is no default value.
+         * `RegexMismatchException`: Raised when a string doesn't match a RegEx.
+         
         All exceptions include the complete path of the parameter that
-        triggered the error.
+        triggered the error, along with specific information such as expected
+        values or size.
         """
         ## Raise an exception if mandatory root parameters are missing
         self.CheckMandatoryParam(config, metadata, param_path)
@@ -438,54 +458,58 @@ class JsonFlexConfig:
                     raise BadValueTypeException(param, value,
                                                 param_metadata["type"],
                                                 param_path)        
-
-                ######## LIST RULES CHECK
-                if isinstance(value, list):            
+                
+                ######## GENERAL CHECK FOR SIZE 
+                if isinstance(value, (list, tuple, str)):
                     ## Check if the size-specific list has the correct size
                     if "size" in param_metadata:
                         size = len(value)
                         expected_size = param_metadata["size"]
                         if size != expected_size:
-                            raise BadListSizeException(param, size,
-                                                       expected_size,
-                                                       "not equal to",
-                                                       param_path)
+                            raise BadSequenceSizeException(
+                                param, size, expected_size,
+                                "not equal to", param_path)
                     else:
                         if "minsize" in param_metadata:
                             size = len(value)
                             min_size = param_metadata["minsize"]
                             if size < min_size:
-                                raise BadListSizeException(param, size,
-                                                           min_size,
-                                                           "bellow min size of",
-                                                           param_path)
+                                raise BadSequenceSizeException(
+                                    param, size, min_size,
+                                    "bellow min size of", param_path)
                         if "maxsize" in param_metadata:
                             size = len(value)
                             max_size = param_metadata["maxsize"]
                             if size > max_size:
-                                raise BadListSizeException(param, size,
-                                                           max_size,
-                                                           "over max size of",
-                                                           param_path)
+                                raise BadSequenceSizeException(
+                                    param, size, max_size,
+                                    "over max size of", param_path)
                     
+                ######## STR RULES CHECK
+                if isinstance(value, str):
+                    regex = param_metadata.get("regex")
+                    if regex and not re.match(regex, value):
+                        raise RegexMismatchException(value, regex, param_path)
+                            
+                ######## LIST RULES CHECK
+                elif isinstance(value, list):
                     ## Check if the elements in list are of the right type
-                    
+                    #  In case of simple type, check is performed directly on
+                    #  each value
                     expected_type = param_metadata.get("content")
-                    # In case of simple type, check is performed directly on
-                    # each value
                     if isinstance(expected_type, type):
                         for v in value:
                             if type(v) != expected_type:
-                                raise BadListTypeException(param, v, type(value),
-                                                           expected_type["content"],
-                                                           param_path)
+                                raise BadValueTypeException(
+                                    param, v, expected_type,
+                                    param_path)
                     # In case of complex type, check content recursively for
                     # each sub-parameter
                     else:
                         for v in value:
                             full_param = (f"{param_path}.{v}"
-                                      if param_path else v)
-                            self._CheckValidConfig(v,  expected_type["content"],
+                                          if param_path else v)
+                            self._CheckValidConfig(v, expected_type["content"],
                                                    full_param)
 
                 ######## DICT RULES CHECK
@@ -603,12 +627,10 @@ class JsonFlexConfig:
          * `InexistentParamException`: If the provided parameter's name can't be
                                        found in the metadata.
          * `MissingMandatoryException`: If a mandatory parameter is not provided.
-         * `BadValueTypeException`: If the type of `value` does not match the
+         * `BadValueTypeException`: If a scalar value does not match the
                                     expected type.
-         * `BadListSizeException`: If the size of a list does not match the
-                                   expected size.
-         * `BadListTypeException`: If an element in a list is of the wrong
-                                   type.
+         * `BadSequenceSizeException`: If the size of a sequence does not match
+                                       the expected size.
          * `BadNameException`: If a key in a dictionary is not recognized.
          * `ValueOutOfRangeException`: If a numeric value is outside the
                                        specified range.
@@ -661,7 +683,7 @@ class BadValueTypeException(ConfigException):
             expected_type_name = str(expected_type)  # Convertir en chaîne si ce n'est pas un type
 
         self.message = (
-            f'Type error on "{source}": wrong value ({value}, expecting {expected_type_name})'
+            f'Type error on "{source}": wrong value ("{value}", expecting {expected_type_name})'
         )
         super().__init__(self.message)
 
@@ -704,30 +726,29 @@ class UnauthorizedValueException(ConfigException):
                       +' of forbidden values'\
 
         super().__init__(message)
-        
-class BadListTypeException(ConfigException):
-    """Raised when a list param contains values of wrong type"""
-    def __init__(self, param, v, comp_type, expected_type, context):
-        source = f'"{param}"'
-        if context:
-            source += f' in {context}"'
-        message = f'Type error on "{source}": wrong value ({v}'\
-                 +f', expecting {comp_type.__name__}'\
-                 +f' of {expected_type.__name__})'
-        super().__init__(message)
 
-class BadListSizeException(ConfigException):
-    """Raised when a tuple param size is wrong"""
+class BadSequenceSizeException(ConfigException):
+    """Raised when a sequence param size is wrong"""
     def __init__(self, param, size, expected_size, expected_msg, context):
         source = f'"{param}"'
         if context:
             source += f' in "{context}"'
-        message = f'Size error on "{source}":'\
+        message = f'Size error on {source}:'\
                  +f' {size} {expected_msg} {expected_size}'
         super().__init__(message)
 
+class RegexMismatchException(ConfigException):
+    """Raised when a string doesn't match a RegEx"""
+    def __init__(self, param, regex, context):
+        source = f'"{param}"'
+        if context:
+            source += f' in "{context}"'
+        message = f'RegEx error on {source}:'\
+                 +f' does not match {regex}'
+        super().__init__(message)
+
 class InexistentParamException(ConfigException):
-    """Raised when a tuple param size is wrong"""
+    """Raised when a compound param size is wrong"""
     def __init__(self, file_path, param):
         message = "Param error in "+file_path+": \""+str(param)\
                  +"\" is not a valid option"
@@ -736,6 +757,11 @@ class InexistentParamException(ConfigException):
 
 if __name__ == "__main__":
     configMetadata = {
+        "database_server": {
+            "type": str,
+            "mandatory": True,
+            "regex": r'^(\d{1,3}\.){3}\d{1,3}$'
+        },
         "database_path" : {
             "type": str,
             "mandatory": True,
@@ -796,6 +822,7 @@ if __name__ == "__main__":
 
     json_code = """
 {
+    "database_server": "192.168.0.1",
     "database_path": "./db",
     "lists": [
         {
@@ -810,7 +837,8 @@ if __name__ == "__main__":
         },
         {
             "name": "MCU",
-            "query": "1542"
+            "query": "1542",
+            "mode": "smart"
         }
     ],
     "colors" :{
