@@ -118,10 +118,12 @@ class JsonFlexConfig:
     When dealing with list parameters, two other rules can be applied:
      * `"content"` (`type` or `dict`):<br>
        Type of the items in the list. If defined, every item in the list must
-       be of this type. If the list contains simple values, "content" must be
+       be of this type. If the list contains simple values, `"content"` must be
        set to their corresponding `type`. If the list contains sub-parameters,
-       "content" must be a dictionary defining the type of every
+       `"content"` must be a dictionary defining the type of every
        sub-parameters, following the same structure as the general metadata.
+       This means that a list can only contain elements of the same type,
+       whether simple or complex.
      * `"size"` (`int`, optional):<br>
        number of objects in the list.
      * `"minsize"` (`int`, optional):<br>
@@ -191,7 +193,7 @@ class JsonFlexConfig:
     Here is an example that creates metadata, loads a configuration file using
     the defined structure, and manipulates parameter values:
     ```python
-configMetadata = {
+    configMetadata = {
         "database_path" : {
             "type": str,
             "mandatory": True,
