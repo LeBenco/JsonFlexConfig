@@ -116,12 +116,18 @@ class JsonFlexConfig:
     # Type-specific rules
 
     When dealing with list parameters, two other rules can be applied:
-     * `"content_type"` (`type`):<br>
-       Type of the items in the list. This means that it's not possible to
-       store different types of objects in a single list (but dictionaries do
-       allow this).
+     * `"content"` (`type` or `dict`):<br>
+       Type of the items in the list. If defined, every item in the list must
+       be of this type. If the list contains simple values, "content" must be
+       set to their corresponding `type`. If the list contains sub-parameters,
+       "content" must be a dictionary defining the type of every
+       sub-parameters, following the same structure as the general metadata.
      * `"size"` (`int`, optional):<br>
        number of objects in the list.
+     * `"minsize"` (`int`, optional):<br>
+       minimum number of objects in the list.
+     * `"maxsize"` (`int`, optional):<br>
+       maximum number of objects in the list.
 
     When dealing with numeric parameters (`int` or `float`), two additional
     rules can be applied:
@@ -135,12 +141,12 @@ class JsonFlexConfig:
 
     When dealing with dictionary parameters, one additional rule can be applied:
      * `"content"`:
-       A dictionary containing metadata description of sub-parameters that
-       follows the same structure as the general metadata. It allows for
-       nesting parameters with arbitrary depth, thus making dictionaries the
-       most versatile structure for parameter management in `JsonFlexConfig`,
-       since each sub-parameter within the dictionary can have its specific
-       rules, including type, mandatory status, and other constraints.
+       A dictionary containing metadata description of sub-parameters. This
+       dictionary must contain a list of keys associated with the specific
+       rules applied to each key. These specific rules follow the same
+       structure as the general metadata. Each sub-parameter within the
+       dictionary can have its specific rules, including type, mandatory
+       status, and other constraints.
 
     Important note: There is almost no verification done on the metadata,
     it's up to the user to ensure that it is correct. An error in metadata may
@@ -185,7 +191,7 @@ class JsonFlexConfig:
     Here is an example that creates metadata, loads a configuration file using
     the defined structure, and manipulates parameter values:
     ```python
-    configMetadata = {
+configMetadata = {
         "database_path" : {
             "type": str,
             "mandatory": True,
@@ -193,17 +199,24 @@ class JsonFlexConfig:
             "ui": "DirPicker" #ignored by the parser
         },
         "lists": {
-            "type": dict,
+            "type": list,
             "content": {
-                "query": {
-                    "type": str,
-                    "mandatory": True
-                },
-                "mode": {
-                    "type": str,
-                    "mandatory": True,
-                    "values": ("smart", "static") # `tuple` can be used instead
-                                                  # of `list`
+                "type": dict,
+                "content": {
+                    "name": {
+                        "type": str,
+                        "mandatory": True
+                    },
+                    "query": {
+                        "type": str,
+                        "mandatory": True
+                    },
+                    "mode": {
+                        "type": str,
+                        "mandatory": True,
+                        "values": ("smart", "static") # `tuple` can be used
+                                                      # instead of `list`
+                    }
                 }
             },
             "label": None
@@ -214,20 +227,41 @@ class JsonFlexConfig:
             "default": "en",
             "values":["en", "fr"],
             "ui": "Select" #ignored by the parser
+        },
+        "colors" :{
+            "type": dict,
+            "content": {
+                "back": {
+                    "type": dict,
+                    "content": {
+                        "regular": {
+                            "type": list,
+                            "size": 3,
+                            "content": int,
+                            "mandatory": True
+                        },
+                        "transparent": {
+                            "type": list,
+                            "size": 4,
+                            "content": int
+                        }
+                    }
+                }
+            }
         }
     }
 
     manager = JsonFlexConfig(configMetadata)
-    manager.LoadConfig("my_config_file.json")
+    manager.LoadJson(json_code)
 
     print(manager.GetParamValue("database_path"))
     manager.SetParamValue("ui_language", "fr")
-    manager.SaveConfig()
     ```
     This code loads JSON files that can declare three parameters:
      * `"database_path"`: a String, that is mandatory.
-     * `"lists"`: a dictionary, which is also mandatory. In this dictionary,
-       every sub-parameter must contain:
+     * `"lists"`: a list, which is also mandatory. In this list, every
+       sub-parameter is a dictionary that must contain:
+         * `"name"`": a mandatory string
          * `"query"`": a mandatory string
          * `"type"`: a mandatory string, for which only two values are valid:
            `"smart"` and `"static"`.
@@ -239,18 +273,26 @@ class JsonFlexConfig:
     ```json
     {
         "database_path": "./db",
-        "lists": {
-            "All": {
+        "lists": [
+            {
+                "name": "All", 
                 "query": "select *",
                 "mode": "smart"
             },
-            "SF, Fantasy": {
+            {
+                "name": "SF, Fantasy",
                 "query": "select * where genre='125'",
                 "mode": "smart"
             },
-            "MCU": {
+            {
+                "name": "MCU",
                 "query": "1542",
-                "mode": "static"
+                "mode": "smart"
+            }
+        ],
+        "colors" :{
+            "back": {
+                "regular": [255, 255, 255]
             }
         }
     }
@@ -266,28 +308,34 @@ class JsonFlexConfig:
     ```json
     {
         "database_path": "./db",
-        "lists": {
-            "All": {
+        "lists": [
+            {
+                "name": "All", 
                 "query": "select *",
                 "mode": "smart"
             },
-            "SF, Fantasy": {
+            {
+                "name": "SF, Fantasy",
                 "query": "select * where genre='125'",
                 "mode": "smart"
             },
-            "MCU": {
-                "query": "1542"
+            {
+                "name": "MCU",
+                "query": "1542",
+            }
+        ],
+        "colors" :{
+            "back": {
+                "regular": [255, 255, 255]
             }
         }
     }
     ```
 
-    Because the sub-parameter `lists.MCU` misses the parameter `mode` which is
+    Because the third sub-parameter of `lists` misses the parameter `mode` which is
     mandatory according to the metadata. Loading this JSON file thus raises a
-    `MissingMandatoryException` with message:
-    ```
-    Parameter error: missing mandatory "mode" from "lists.MCU"
-    ```
+    `MissingMandatoryException` with message: `Parameter error: missing
+    mandatory "mode" in "{'name': 'MCU', 'query': '1542'}"`
     """
     def __init__(self, config_metadata):
         self.configMetadata = config_metadata
@@ -295,14 +343,16 @@ class JsonFlexConfig:
     def GetMetadata(self):
         return self.configMetadata
     
-    def LoadConfig(self, config_path):
+    def LoadFile(self, config_path):
         with open(config_path, 'r', encoding="UTF-8") as f:
-            self.SetConfig(json.loads(f.read()))
-            
+            self.LoadJson(f.read())    
             self.configPath = config_path
-            self.previousConfig = None
     
-    def SaveConfig(self, config_path=None):
+    def LoadJson(self, json_code):
+        self.SetConfig(json.loads(json_code))
+        self.previousConfig = None
+    
+    def SaveConfigToFile(self, config_path=None):
         if config_path is None:
             config_path = self.configPath
             
@@ -370,25 +420,22 @@ class JsonFlexConfig:
         triggered the error.
         """
         ## Raise an exception if mandatory root parameters are missing
-        self.CheckMandatoryParam(config, metadata)
+        self.CheckMandatoryParam(config, metadata, param_path)
         
         ## Raise an exception if root parameters are not valid
-        self.CheckParamNames(config, metadata)
+        self.CheckParamNames(config, metadata, param_path)
         
         ## Check content of `config`
         for param in config:
             value = config.get(param)
             if value is not None:
                 param_metadata = metadata[param]
-                
-                ## Used to show the full path of the parameter in exception messages
-                full_param = f"{param_path}.{param}" if param_path else param
 
                 ######## GENERAL CHECK FOR TYPE 
                 if type(value) != param_metadata["type"]:
                     raise BadValueTypeException(param, value,
                                                 param_metadata["type"],
-                                                full_param)        
+                                                param_path)        
 
                 ######## LIST RULES CHECK
                 if isinstance(value, list):            
@@ -399,22 +446,53 @@ class JsonFlexConfig:
                         if size != expected_size:
                             raise BadListSizeException(param, size,
                                                        expected_size,
-                                                       full_param)
+                                                       "not equal to",
+                                                       param_path)
+                    else:
+                        if "minsize" in param_metadata:
+                            size = len(value)
+                            min_size = param_metadata["minsize"]
+                            if size < min_size:
+                                raise BadListSizeException(param, size,
+                                                           min_size,
+                                                           "bellow min size of",
+                                                           param_path)
+                        if "maxsize" in param_metadata:
+                            size = len(value)
+                            max_size = param_metadata["maxsize"]
+                            if size > max_size:
+                                raise BadListSizeException(param, size,
+                                                           max_size,
+                                                           "over max size of",
+                                                           param_path)
                     
                     ## Check if the elements in list are of the right type
-                    for v in value:
-                        expected_type = param_metadata["content_type"]
-                        if type(v) != expected_type:
-                            raise BadListTypeException(param, v, type(value),
-                                                       expected_type,
-                                                       full_param)
+                    
+                    expected_type = param_metadata.get("content")
+                    # In case of simple type, check is performed directly on
+                    # each value
+                    if isinstance(expected_type, type):
+                        for v in value:
+                            if type(v) != expected_type:
+                                raise BadListTypeException(param, v, type(value),
+                                                           expected_type["content"],
+                                                           param_path)
+                    # In case of complex type, check content recursively for
+                    # each sub-parameter
+                    else:
+                        for v in value:
+                            full_param = (f"{param_path}.{v}"
+                                      if param_path else v)
+                            self._CheckValidConfig(v,  expected_type["content"],
+                                                   full_param)
 
                 ######## DICT RULES CHECK
-                elif isinstance(value, dict) and "content" in param_metadata:
-                    ## Check for each sub-parameter individually
-                    for entry_name, entry_value in value.items():
-                        self._CheckValidConfig(entry_value,
-                                               param_metadata["content"],
+                elif isinstance(value, dict):
+                    if "content" in param_metadata:
+                        ## Check for each sub-parameter individually
+                        full_param = (f"{param_path}.{param}"
+                                      if param_path else param)
+                        self._CheckValidConfig(value, param_metadata["content"],
                                                full_param)
 
                 ######## NUMERIC VALUE RULES CHECK
@@ -422,22 +500,24 @@ class JsonFlexConfig:
                     if "min" in param_metadata and value < param_metadata["min"]:
                         raise ValueOutOfRangeException(param, value,
                                                        param_metadata["min"],
-                                                       full_param)
+                                                       param_path)
                     if "max" in param_metadata and value > param_metadata["max"]:
                         raise ValueOutOfRangeException(param, value,
                                                        param_metadata["max"],
-                                                       full_param)
+                                                       param_path)
 
                 ######## GENERAL CHECK FOR SET OF AUTHORIZED VALUES
-                if "values" in param_metadata and value not in param_metadata["values"]:
+                if ("values" in param_metadata and
+                    value not in param_metadata["values"]):
                     raise UnauthorizedValueException(param, value,
                                                      param_metadata["values"],
-                                                     full_param)
+                                                     param_path)
 
                 ######## GENERAL CHECK FOR SET OF FORBIDDEN VALUES
-                if "forbidden_values" in param_metadata and value in param_metadata["forbidden_values"]:
+                if ("forbidden_values" in param_metadata and
+                    value in param_metadata["forbidden_values"]):
                     raise UnauthorizedValueException(param, value, None,
-                                                     full_param)
+                                                     param_path)
 
     def CheckParamNames(self, config, metadata, context=None):
         """
@@ -589,7 +669,7 @@ class MissingMandatoryException(ConfigException):
     def __init__(self, param, context=None):
         message = f'Parameter error: missing mandatory "{param}"'
         if context:
-            message += f' in "{param}"'
+            message += f' in "{context}"'
         super().__init__(message)
 
 class ValueOutOfRangeException(ConfigException):
@@ -615,10 +695,10 @@ class UnauthorizedValueException(ConfigException):
             source += f' in {context}"'
         
         if authorized_values:
-            message = f'Value error on "{source}": wrong value ({value}'\
+            message = f'Value error on {source}: wrong value ("{value}"'\
                      +f', expecting of one {authorized_values})'
         else:
-            message = f'Value error on "{source}": {value} in list'\
+            message = f'Value error on {source}: "{value}" in list'\
                       +' of forbidden values'\
 
         super().__init__(message)
@@ -634,13 +714,14 @@ class BadListTypeException(ConfigException):
                  +f' of {expected_type.__name__})'
         super().__init__(message)
 
-class BadCompositeSizeException(ConfigException):
+class BadListSizeException(ConfigException):
     """Raised when a tuple param size is wrong"""
-    def __init__(self, param, size, expected_size):
-        message = "Type error on \""+str(param)\
-                 +"\": wrong size ("+str(size)\
-                 +", expecting tuple"\
-                 +" of "+str(expected_size)+" elements)"
+    def __init__(self, param, size, expected_size, expected_msg, context):
+        source = f'"{param}"'
+        if context:
+            source += f' in "{context}"'
+        message = f'Size error on "{source}":'\
+                 +f' {size} {expected_msg} {expected_size}'
         super().__init__(message)
 
 class InexistentParamException(ConfigException):
@@ -650,3 +731,94 @@ class InexistentParamException(ConfigException):
                  +"\" is not a valid option"
         super().__init__(message)
 
+
+if __name__ == "__main__":
+    configMetadata = {
+        "database_path" : {
+            "type": str,
+            "mandatory": True,
+            "label": "Path to the database",
+            "ui": "DirPicker" #ignored by the parser
+        },
+        "lists": {
+            "type": list,
+            "content": {
+                "type": dict,
+                "content": {
+                    "name": {
+                        "type": str,
+                        "mandatory": True
+                    },
+                    "query": {
+                        "type": str,
+                        "mandatory": True
+                    },
+                    "mode": {
+                        "type": str,
+                        "mandatory": True,
+                        "values": ("smart", "static") # `tuple` can be used instead of `list`
+                    }
+                }
+            },
+            "label": None
+        },
+        'ui_language': {
+            "type": str,
+            "label": "Drive-In language",
+            "default": "en",
+            "values":["en", "fr"],
+            "ui": "Select" #ignored by the parser
+        },
+        "colors" :{
+            "type": dict,
+            "content": {
+                "back": {
+                    "type": dict,
+                    "content": {
+                        "regular": {
+                            "type": list,
+                            "size": 3,
+                            "content": int,
+                            "mandatory": True
+                        },
+                        "transparent": {
+                            "type": list,
+                            "size": 4,
+                            "content": int
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    json_code = """
+{
+    "database_path": "./db",
+    "lists": [
+        {
+            "name": "All", 
+            "query": "select *",
+            "mode": "smart"
+        },
+        {
+            "name": "SF, Fantasy",
+            "query": "select * where genre='125'",
+            "mode": "smart"
+        },
+        {
+            "name": "MCU",
+            "query": "1542"
+        }
+    ],
+    "colors" :{
+        "back": {
+            "regular": [1, 2, 3]
+        }
+    }
+}"""
+    manager = JsonFlexConfig(configMetadata)
+    manager.LoadJson(json_code)
+
+    print(manager.GetParamValue("database_path"))
+    manager.SetParamValue("ui_language", "fr")
