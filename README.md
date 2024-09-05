@@ -169,7 +169,7 @@ manager.SetParamValue("ui_language", "fr")
 ```
 This code loads JSON files that can declare three parameters:
  * `"database_path"`: a String, that is mandatory.
- * `"lists"`: a list, which is also mandatory. In this list, every sub-parameter is a dictionary that must contain:
+ * `"lists"`: a list, which is also mandatory. In this list, every sub-parameter is a dictionary that contains the following key/value pairs:
      * `"name"`": a mandatory string
      * `"query"`": a mandatory string
      * `"type"`: a mandatory string, for which only two values are valid: `"smart"` and `"static"`.
