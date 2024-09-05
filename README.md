@@ -102,63 +102,63 @@ All exceptions include the complete path of the parameter that triggered the err
 Here is an example that creates metadata, loads a configuration file using the defined structure, and manipulates parameter values:
 ```python
 configMetadata = {
-	"database_path" : {
-		"type": str,
-		"mandatory": True,
-		"label": "Path to the database",
-		"ui": "DirPicker" #ignored by the parser
-	},
-	"lists": {
-		"type": list,
-		"content": {
-			"type": dict,
-			"content": {
-				"name": {
-					"type": str,
-					"mandatory": True
-				},
-				"query": {
-					"type": str,
-					"mandatory": True
-				},
-				"mode": {
-					"type": str,
-					"mandatory": True,
-					"values": ("smart", "static") # `tuple` can be used
-												  # instead of `list`
-				}
-			}
-		},
-		"label": None
-	},
-	'ui_language': {
-		"type": str,
-		"label": "Drive-In language",
-		"default": "en",
-		"values":["en", "fr"],
-		"ui": "Select" #ignored by the parser
-	},
-	"colors" :{
-		"type": dict,
-		"content": {
-			"back": {
-				"type": dict,
-				"content": {
-					"regular": {
-						"type": list,
-						"size": 3,
-						"content": int,
-						"mandatory": True
-					},
-					"transparent": {
-						"type": list,
-						"size": 4,
-						"content": int
-					}
-				}
-			}
-		}
-	}
+    "database_path" : {
+        "type": str,
+        "mandatory": True,
+        "label": "Path to the database",
+        "ui": "DirPicker" #ignored by the parser
+    },
+    "lists": {
+        "type": list,
+        "content": {
+            "type": dict,
+            "content": {
+                "name": {
+                    "type": str,
+                    "mandatory": True
+                },
+                "query": {
+                    "type": str,
+                    "mandatory": True
+                },
+                "mode": {
+                    "type": str,
+                    "mandatory": True,
+                    "values": ("smart", "static") # `tuple` can be used
+                                                  # instead of `list`
+                }
+            }
+        },
+        "label": None
+    },
+    'ui_language': {
+        "type": str,
+        "label": "Drive-In language",
+        "default": "en",
+        "values":["en", "fr"],
+        "ui": "Select" #ignored by the parser
+    },
+    "colors" :{
+        "type": dict,
+        "content": {
+            "back": {
+                "type": dict,
+                "content": {
+                    "regular": {
+                        "type": list,
+                        "size": 3,
+                        "content": int,
+                        "mandatory": True
+                    },
+                    "transparent": {
+                        "type": list,
+                        "size": 4,
+                        "content": int
+                    }
+                }
+            }
+        }
+    }
 }
 
 manager = JsonFlexConfig(configMetadata)
@@ -170,37 +170,37 @@ manager.SetParamValue("ui_language", "fr")
 This code loads JSON files that can declare three parameters:
  * `"database_path"`: a String, that is mandatory.
  * `"lists"`: a list, which is also mandatory. In this list, every sub-parameter is a dictionary that must contain:
-	 * `"name"`": a mandatory string
-	 * `"query"`": a mandatory string
-	 * `"type"`: a mandatory string, for which only two values are valid: `"smart"` and `"static"`.
+     * `"name"`": a mandatory string
+     * `"query"`": a mandatory string
+     * `"type"`: a mandatory string, for which only two values are valid: `"smart"` and `"static"`.
  * `"ui-language"`: an optional string, for which only two values are valid: `"en"` and `"fr"`. If the parameter is not in the configuration file, requesting for `"ui-language"` returns `"en"`.
 
 Applying this code to the following JSON file:
 ```json
 {
-	"database_path": "./db",
-	"lists": [
-		{
-			"name": "All", 
-			"query": "select *",
-			"mode": "smart"
-		},
-		{
-			"name": "SF, Fantasy",
-			"query": "select * where genre='125'",
-			"mode": "smart"
-		},
-		{
-			"name": "MCU",
-			"query": "1542",
-			"mode": "smart"
-		}
-	],
-	"colors" :{
-		"back": {
-			"regular": [255, 255, 255]
-		}
-	}
+    "database_path": "./db",
+    "lists": [
+        {
+            "name": "All", 
+            "query": "select *",
+            "mode": "smart"
+        },
+        {
+            "name": "SF, Fantasy",
+            "query": "select * where genre='125'",
+            "mode": "smart"
+        },
+        {
+            "name": "MCU",
+            "query": "1542",
+            "mode": "smart"
+        }
+    ],
+    "colors" :{
+        "back": {
+            "regular": [255, 255, 255]
+        }
+    }
 }
 ```
 
@@ -212,28 +212,28 @@ displays:
 and add a new parameter `ui_language` set to `"fr"`. But with this JSON file, it doesn't work:
 ```json
 {
-	"database_path": "./db",
-	"lists": [
-		{
-			"name": "All", 
-			"query": "select *",
-			"mode": "smart"
-		},
-		{
-			"name": "SF, Fantasy",
-			"query": "select * where genre='125'",
-			"mode": "smart"
-		},
-		{
-			"name": "MCU",
-			"query": "1542",
-		}
-	],
-	"colors" :{
-		"back": {
-			"regular": [255, 255, 255]
-		}
-	}
+    "database_path": "./db",
+    "lists": [
+        {
+            "name": "All", 
+            "query": "select *",
+            "mode": "smart"
+        },
+        {
+            "name": "SF, Fantasy",
+            "query": "select * where genre='125'",
+            "mode": "smart"
+        },
+        {
+            "name": "MCU",
+            "query": "1542",
+        }
+    ],
+    "colors" :{
+        "back": {
+            "regular": [255, 255, 255]
+        }
+    }
 }
 ```
 Because the third sub-parameter of `lists` misses the parameter `mode` which is mandatory according to the metadata. Loading this JSON file thus raises a `MissingMandatoryException` with message: `Parameter error: missing mandatory "mode" in "{'name': 'MCU', 'query': '1542'}"`.
