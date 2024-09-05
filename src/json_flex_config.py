@@ -46,7 +46,7 @@ class JsonFlexConfig:
     a single Python structure, which can be defined directly in the code
     without the need for external files. This approach bypasses some of the
     common complexities found in more advanced libraries, such as the need to
-    define multiple functions or subclasses or manage separate configuration
+    implement multiple functions or subclasses or manage separate configuration
     files in (yet) another format. While tools like Pydantic excel in enabling
     the implementation of custom validators and supporting a variety of formats,
     which can be particularly useful in complex scenarios, _JsonFlexConfig_
