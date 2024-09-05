@@ -38,10 +38,14 @@ A `JsonFlexConfig` object requires metadata that describes the expected format o
 # Type-specific rules
 
 When dealing with list parameters, two other rules can be applied:
- * `"content_type"` (`type`):<br>
-   Type of the items in the list. This means that it's not possible to store different types of objects in a single list (but dictionaries do allow this).
+ * `"content"` (`type` or `dict`):<br>
+   Type of the items in the list. If defined, every item in the list must be of this type. If the list contains simple values, `"content"` must be set to their corresponding `type`. If the list contains sub-parameters, `"content"` must be a dictionary defining the type of every sub-parameters, following the same structure as the general metadata. This means that a list can only contain elements of the same type, whether simple or complex.
  * `"size"` (`int`, optional):<br>
    number of objects in the list.
+ * `"minsize"` (`int`, optional):<br>
+   minimum number of objects in the list.
+ * `"maxsize"` (`int`, optional):<br>
+   maximum number of objects in the list.
 
 When dealing with numeric parameters (`int` or `float`), two additional rules can be applied:
  * `"min"` (`int` or `float`, optional):<br>
@@ -53,7 +57,7 @@ Note that defining a `float` parameter and providing an `int` bound is perfectly
 
 When dealing with dictionary parameters, one additional rule can be applied:
  * `"content"`:
-   A dictionary containing metadata description of sub-parameters that follows the same structure as the general metadata. It allows for nesting parameters with arbitrary depth, thus making dictionaries the most versatile structure for parameter management in `JsonFlexConfig`, since each sub-parameter within the dictionary can have its specific rules, including type, mandatory status, and other constraints.
+A dictionary containing metadata description of sub-parameters. This dictionary must contain a list of keys associated with the specific rules applied to each key. These specific rules follow the same structure as the general metadata. Each sub-parameter within the dictionary can have its specific rules, including type, mandatory status, and other constraints.
 
 Important note: There is almost no verification done on the metadata, it's up to the user to ensure that it is correct. An error in metadata may lead to inconsistent behavior from _JsonFlexConfig_, for example if a value is at the same time in the list of authorized values and in the list of forbidden ones, or if a mandatory parameter has a default value. Mutually exclusive rules may also happen, for example if a `min` value is greater than a `max` value.  
 
@@ -65,14 +69,14 @@ In addition to these parameters, rules in the metadata file can also define othe
 # Exceptions
 
 When loading a configuration file or writing data to a configuration file, the following exception can be raised in case of invalid configuration data:
- * `BadNameException`: Raised when a param name is not defined in the metadata
- * `BadValueTypeException`: Raised when a param value type is wrong
+ * `BadNameException`: Raised when a param name is not defined in the metadata.
+ * `BadValueTypeException`: Raised when a param value type is wrong.
  * `MissingMandatoryException`: Raised when a mandatory param is missing
- * `ValueOutOfRangeException`: Raised when a digital param value is out of range
- * `UnauthorizedValueException`: Raised when a param value is not in the set of authorized values or is in the set of forbidden values
- * `BadListTypeException`: Raised when a list param contains values of wrong type
+ * `ValueOutOfRangeException`: Raised when a digital param value is out of range.
+ * `UnauthorizedValueException`: Raised when a param value is not in the set of authorized values or is in the set of forbidden values.
+ * `BadListTypeException`: Raised when a list param contains values of wrong type.
  * `BadListSizeException`: Raised when a tuple param size is wrong
- * `InexistentParamException`: Raised when reading a param that doesn't exist in the configuration data and for which there is no default value
+ * `InexistentParamException`: Raised when reading a param that doesn't exist in the configuration data and for which there is no default value.
 
 
 # Example
@@ -87,16 +91,24 @@ configMetadata = {
         "ui": "DirPicker" #ignored by the parser
     },
     "lists": {
-        "type": dict,
+        "type": list,
         "content": {
-            "query": {
-                "type": str,
-                "mandatory": True
-            },
-            "mode": {
-                "type": str,
-                "mandatory": True,
-                "values": ("smart", "static") # `tuple` can be used instead of `list`
+            "type": dict,
+            "content": {
+                "name": {
+                    "type": str,
+                    "mandatory": True
+                },
+                "query": {
+                    "type": str,
+                    "mandatory": True
+                },
+                "mode": {
+                    "type": str,
+                    "mandatory": True,
+                    "values": ("smart", "static") # `tuple` can be used
+                                                  # instead of `list`
+                }
             }
         },
         "label": None
@@ -107,39 +119,68 @@ configMetadata = {
         "default": "en",
         "values":["en", "fr"],
         "ui": "Select" #ignored by the parser
+    },
+    "colors" :{
+        "type": dict,
+        "content": {
+            "back": {
+                "type": dict,
+                "content": {
+                    "regular": {
+                        "type": list,
+                        "size": 3,
+                        "content": int,
+                        "mandatory": True
+                    },
+                    "transparent": {
+                        "type": list,
+                        "size": 4,
+                        "content": int
+                    }
+                }
+            }
+        }
     }
 }
 
 manager = JsonFlexConfig(configMetadata)
-manager.LoadConfig("my_config_file.json")
+manager.LoadJson(json_code)
 
 print(manager.GetParamValue("database_path"))
 manager.SetParamValue("ui_language", "fr")
-manager.SaveConfig()
 ```
 This code loads JSON files that can declare three parameters:
  * `"database_path"`: a String, that is mandatory.
- * `"lists"`: a dictionary, which is also mandatory. In this dictionary, every sub-parameter must contain:
+ * `"lists"`: a list, which is also mandatory. In this list, every sub-parameter is a dictionary that must contain:
+     * `"name"`": a mandatory string
      * `"query"`": a mandatory string
-     * `"type"`: a mandatory string, for which only two values are valid:`"smart"` and `"static"`.
- * `"ui-language"`: an optional string, for which only two values are valid:`"en"` and `"fr"`. If the parameter is not in the configuration file, requesting for `"ui-language"` returns `"en"`.
+     * `"type"`: a mandatory string, for which only two values are valid: `"smart"` and `"static"`.
+ * `"ui-language"`: an optional string, for which only two values are valid: `"en"` and `"fr"`. If the parameter is not in the configuration file, requesting for `"ui-language"` returns `"en"`.
 
 Applying this code to the following JSON file:
 ```json
 {
     "database_path": "./db",
-    "lists": {
-        "All": {
+    "lists": [
+        {
+            "name": "All", 
             "query": "select *",
             "mode": "smart"
         },
-        "SF, Fantasy": {
+        {
+            "name": "SF, Fantasy",
             "query": "select * where genre='125'",
             "mode": "smart"
         },
-        "MCU": {
+        {
+            "name": "MCU",
             "query": "1542",
-            "mode": "static"
+            "mode": "smart"
+        }
+    ],
+    "colors" :{
+        "back": {
+            "regular": [255, 255, 255]
         }
     }
 }
@@ -154,24 +195,28 @@ and add a new parameter `ui_language` set to `"fr"`. But with this JSON file, it
 ```json
 {
     "database_path": "./db",
-    "lists": {
-        "All": {
+    "lists": [
+        {
+            "name": "All", 
             "query": "select *",
             "mode": "smart"
         },
-        "SF, Fantasy": {
+        {
+            "name": "SF, Fantasy",
             "query": "select * where genre='125'",
             "mode": "smart"
         },
-        "MCU": {
-            "query": "1542"
+        {
+            "name": "MCU",
+            "query": "1542",
+        }
+    ],
+    "colors" :{
+        "back": {
+            "regular": [255, 255, 255]
         }
     }
 }
 ```
 
-Because the sub-parameter `lists.MCU` misses the parameter `mode` which is mandatory according to the metadata. Loading this JSON file thus raises a
-`MissingMandatoryException` with message:
-```
-Parameter error: missing mandatory "mode" from "lists.MCU"
-```
+Because the third sub-parameter of `lists` misses the parameter `mode` which is mandatory according to the metadata. Loading this JSON file thus raises a `MissingMandatoryException` with message: `Parameter error: missing mandatory "mode" in "{'name': 'MCU', 'query': '1542'}"`
