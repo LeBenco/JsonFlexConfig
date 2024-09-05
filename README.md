@@ -174,6 +174,9 @@ This code loads JSON files that can declare three parameters:
      * `"query"`": a mandatory string
      * `"type"`: a mandatory string, for which only two values are valid: `"smart"` and `"static"`.
  * `"ui-language"`: an optional string, for which only two values are valid: `"en"` and `"fr"`. If the parameter is not in the configuration file, requesting for `"ui-language"` returns `"en"`.
+ * `"colors"`: a dictionary that contains the following key/value pairs:
+     * `"regular"`": a mandatory list of three `int`
+     * `"transparent"`": an optional list of four `int`
 
 Applying this code to the following JSON file:
 ```json
