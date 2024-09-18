@@ -133,7 +133,7 @@ configMetadata = {
     },
     'ui_language': {
         "type": str,
-        "label": "Drive-In language",
+        "label": "Application language",
         "default": "en",
         "values":["en", "fr"],
         "ui": "Select" #ignored by the parser
